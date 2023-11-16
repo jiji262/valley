@@ -1,0 +1,78 @@
+---
+import Layout from '../../../layouts/Base.astro'
+import { isValidEmail } from '../../../lib/auth/validation'
+import { generatePasswordResetToken } from '../../../lib/auth/token'
+import { sendPasswordResetLink } from '../../../lib/auth/email'
+
+import { db } from '../../../lib/db'
+const session = await Astro.locals.auth.validate()
+if (session) return Astro.redirect('/', 302)
+
+let success = false
+let error = ''
+
+if (Astro.request.method === 'POST') {
+  const formData = await Astro.request.formData()
+  const email =
+    formData.get('email')?.toString() || ''
+
+  if (isValidEmail(email)) {
+    const storedUser = await db
+      .selectFrom('user')
+      .selectAll()
+      .where('email', '=', email)
+      .executeTakeFirst()
+
+    if (storedUser) {
+      const token =
+        await generatePasswordResetToken(
+          storedUser.id
+        )
+
+      await sendPasswordResetLink(token)
+      success = true
+    } else {
+      error = 'User does not exist'
+      Astro.response.status = 400
+    }
+  } else {
+    error = 'Email is invalid'
+  }
+}
+---
+
+<Layout>
+  <h1 class='mb-4 font-bold border-b'>
+    Reset password
+  </h1>
+  <form method='post'>
+    <p class='flex justify-between max-w-sm mb-4'>
+      <label for='email' class=''>Email:</label>
+      <input
+        type='email'
+        name='email'
+        class='p-1 text-black border'
+      />
+    </p>
+    <input
+      type='submit'
+      class='px-3 py-1 border-2 border-gray-700 cursor-pointer'
+      value='Reset'
+    />
+  </form>
+
+  <div class='mt-10'>
+    {
+      error && (
+        <p class='p-2 text-white bg-red-500'>
+          {error}
+        </p>
+      )
+    }
+  </div>
+  <p class='mt-5'>
+    <a href='/auth/login' class='underline'
+      >Login</a
+    >
+  </p>
+</Layout>

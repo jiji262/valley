@@ -1,0 +1,14 @@
+---
+import Layout from '../layouts/Base.astro'
+const session = await Astro.locals.auth.validate()
+if (!session) return Astro.redirect('/', 302)
+---
+
+<Layout>
+  <h1 class='mb-4 font-bold border-b'>
+    Private area
+  </h1>
+  <p>Access your exclusive content here:</p>
+  <p>...</p>
+  <p>...</p>
+</Layout>

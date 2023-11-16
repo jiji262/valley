@@ -1,0 +1,102 @@
+---
+import Layout from '../../layouts/Base.astro'
+import { isValidData } from '../../lib/auth/validation'
+import { createUser } from '../../lib/auth/user'
+import { createSession } from '../../lib/auth/session'
+
+let error = ''
+
+if (Astro.request.method === 'POST') {
+  const formData = await Astro.request.formData()
+  const email =
+    formData.get('email')?.toString() || ''
+  const password =
+    formData.get('password')?.toString() || ''
+
+  const { valid, message } = isValidData(
+    email,
+    password
+  )
+
+  if (message) error = message
+
+  if (valid) {
+    try {
+      const user = await createUser(
+        email,
+        password
+      )
+      const session = await createSession(
+        email,
+        password
+      )
+
+      // set the cookie
+      Astro.locals.auth.setSession(session)
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        console.error(e.message)
+        const pgError = e as { code?: string }
+        if (pgError.code === '23505') {
+          error = 'User already exists'
+          Astro.response.status = 400
+        }
+      } else {
+        console.error(e)
+        error = 'An unknown error occurred'
+        Astro.response.status = 500
+      }
+    }
+  }
+}
+
+const session = await Astro.locals.auth.validate()
+if (session) return Astro.redirect('/', 302)
+---
+
+<Layout>
+  <h1 class='mb-4 font-bold border-b'>Signup</h1>
+  <form method='post'>
+    <p class='flex justify-between max-w-sm mb-4'>
+      <label for='email' class=''>Email:</label>
+      <input
+        type='email'
+        name='email'
+        class='p-1 text-black border'
+        required
+      />
+    </p>
+    <p class='flex justify-between max-w-sm mb-4'>
+      <label for='password' class=''
+        >Password:</label
+      >
+      <input
+        type='password'
+        name='password'
+        class='p-1 text-black border'
+        required
+        minlength='8'
+        maxlength='255'
+      />
+    </p>
+    <input
+      type='submit'
+      class='px-3 py-1 border-2 border-gray-700 cursor-pointer'
+      value='Signup'
+    />
+  </form>
+  <div class='mt-10'>
+    {
+      error && (
+        <p class='p-2 text-white bg-red-500'>
+          {error}
+        </p>
+      )
+    }
+  </div>
+  <p class='mt-5'>
+    <a href='/auth/login' class='underline'
+      >Already have an account? Login</a
+    >
+  </p>
+</Layout>

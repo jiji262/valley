@@ -1,0 +1,17 @@
+{
+  "scripts": {
+    "dev": "bun run --hot src/index.ts"
+  },
+  "dependencies": {
+    "hono": "^3.10.0",
+    "kysely": "^0.26.3",
+    "pg": "^8.11.3",
+    "validator": "^13.11.0"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.10.9",
+    "@types/validator": "^13.11.6",
+    "bun-types": "^1.0.7",
+    "kysely-codegen": "^0.11.0"
+  }
+}

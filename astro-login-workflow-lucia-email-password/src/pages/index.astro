@@ -1,0 +1,30 @@
+---
+import Layout from '../layouts/Base.astro'
+const session = await Astro.locals.auth.validate()
+---
+
+<Layout>
+  <h1 class='mb-4 font-bold border-b'>Home</h1>
+  {
+    session ? (
+      <>
+        <p>
+          <a class='underline' href='/private'>
+            Access the private area
+          </a>
+        </p>
+        <p>
+          <a
+            class='underline'
+            href='/auth/logout'>
+            Logout
+          </a>
+        </p>
+      </>
+    ) : (
+      <a class='underline' href='/auth/login'>
+        Login
+      </a>
+    )
+  }
+</Layout>
